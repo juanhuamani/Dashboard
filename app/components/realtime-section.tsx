@@ -66,23 +66,25 @@ const defaultMetrics: MetricType = {
 };
 
 export function RealtimeSection() {
-  const raw = useRealtimeData();
+  const [isLive, setIsLive] = useState(true)
+  const [autoRefresh, setAutoRefresh] = useState(true)
+  const [refreshInterval, setRefreshInterval] = useState(10)
+  const [selectedView, setSelectedView] = useState("overview")
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!autoRefresh || !isLive) return;
+    const interval = setInterval(() => setTick(t => t + 1), refreshInterval * 1000);
+    return () => clearInterval(interval);
+  }, [autoRefresh, isLive, refreshInterval]);
+
+  const raw = useRealtimeData([tick]);
   const topSongs = (raw.topSongs ?? []) as SongType[];
   const latestPlays = (raw.latestPlays ?? []) as PlayType[];
   const metrics = (raw.metrics ?? defaultMetrics) as MetricType;
   const activityData = (raw.activityData ?? []) as any[];
   const loading = raw.loading;
   const error = raw.error;
-  const [isLive, setIsLive] = useState(true)
-  const [autoRefresh, setAutoRefresh] = useState(true)
-  const [refreshInterval, setRefreshInterval] = useState(3)
-  const [selectedView, setSelectedView] = useState("overview")
-
-  useEffect(() => {
-    if (!autoRefresh || !isLive) return
-    const interval = setInterval(() => {}, refreshInterval * 1000)
-    return () => clearInterval(interval)
-  }, [autoRefresh, isLive, refreshInterval])
 
   if (loading) return <div className="p-8">Cargando datos de Spark...</div>;
   if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
