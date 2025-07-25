@@ -40,87 +40,28 @@ import {
   ComposedChart,
 } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { useHistoricalData } from '../../hooks/useHistoricalData';
 
-// Mantener los mismos datos
-const topSongsData = {
-  week: [
-    { song_title: "Flowers", artist_name: "Miley Cyrus", total_plays: 8420, growth: 15.2, revenue: 421 },
-    { song_title: "Anti-Hero", artist_name: "Taylor Swift", total_plays: 7830, growth: 12.8, revenue: 391 },
-    { song_title: "Unholy", artist_name: "Sam Smith", total_plays: 7290, growth: -2.1, revenue: 364 },
-    { song_title: "As It Was", artist_name: "Harry Styles", total_plays: 6560, growth: -8.5, revenue: 328 },
-    { song_title: "Bad Habit", artist_name: "Steve Lacy", total_plays: 6140, growth: 5.7, revenue: 307 },
-  ],
-  month: [
-    { song_title: "As It Was", artist_name: "Harry Styles", total_plays: 154200, growth: 8.3, revenue: 7710 },
-    { song_title: "Heat Waves", artist_name: "Glass Animals", total_plays: 142300, growth: -3.2, revenue: 7115 },
-    { song_title: "Stay", artist_name: "The Kid LAROI", total_plays: 138900, growth: 12.1, revenue: 6945 },
-    { song_title: "Bad Habits", artist_name: "Ed Sheeran", total_plays: 125600, growth: -1.8, revenue: 6280 },
-    { song_title: "Good 4 U", artist_name: "Olivia Rodrigo", total_plays: 113400, growth: 6.9, revenue: 5670 },
-  ],
-  quarter: [
-    { song_title: "Blinding Lights", artist_name: "The Weeknd", total_plays: 456200, growth: 5.7, revenue: 22810 },
-    { song_title: "Shape of You", artist_name: "Ed Sheeran", total_plays: 421300, growth: -2.1, revenue: 21065 },
-    { song_title: "Someone You Loved", artist_name: "Lewis Capaldi", total_plays: 389400, growth: 8.9, revenue: 19470 },
-    { song_title: "Watermelon Sugar", artist_name: "Harry Styles", total_plays: 356700, growth: 3.4, revenue: 17835 },
-    { song_title: "Levitating", artist_name: "Dua Lipa", total_plays: 332800, growth: 11.2, revenue: 16640 },
-  ],
-  year: [
-    { song_title: "Blinding Lights", artist_name: "The Weeknd", total_plays: 1804200, growth: 15.3, revenue: 90210 },
-    { song_title: "Shape of You", artist_name: "Ed Sheeran", total_plays: 1652300, growth: 8.7, revenue: 82615 },
-    {
-      song_title: "Someone You Loved",
-      artist_name: "Lewis Capaldi",
-      total_plays: 1528900,
-      growth: 12.4,
-      revenue: 76445,
-    },
-    { song_title: "Watermelon Sugar", artist_name: "Harry Styles", total_plays: 1485600, growth: 6.8, revenue: 74280 },
-    { song_title: "Levitating", artist_name: "Dua Lipa", total_plays: 1423400, growth: 18.9, revenue: 71170 },
-  ],
-}
+type SongDataType = { song_title: string; artist_name: string; total_plays: number; growth: number; revenue: number };
+type GenreTrendType = { [key: string]: string | number };
+type DeviceUsageType = { device_type: string; percentage: number; color: string; icon: string; growth: number };
+type TimeAnalysisType = { hour: string; users: number; plays: number };
+type RegionType = { region: string; users: number; plays: number; revenue: number };
 
-const genreTrendsData = [
-  { date: "Ene", Pop: 4000, Rock: 2400, Hip_Hop: 2400, Electronic: 1800, Reggaeton: 1200, Country: 800 },
-  { date: "Feb", Pop: 3000, Rock: 1398, Hip_Hop: 2210, Electronic: 2200, Reggaeton: 1400, Country: 900 },
-  { date: "Mar", Pop: 2000, Rock: 9800, Hip_Hop: 2290, Electronic: 2500, Reggaeton: 1600, Country: 1100 },
-  { date: "Abr", Pop: 2780, Rock: 3908, Hip_Hop: 2000, Electronic: 2100, Reggaeton: 1800, Country: 1200 },
-  { date: "May", Pop: 1890, Rock: 4800, Hip_Hop: 2181, Electronic: 2300, Reggaeton: 2000, Country: 1300 },
-  { date: "Jun", Pop: 2390, Rock: 3800, Hip_Hop: 2500, Electronic: 2400, Reggaeton: 2200, Country: 1400 },
-  { date: "Jul", Pop: 3200, Rock: 2900, Hip_Hop: 2800, Electronic: 2600, Reggaeton: 2400, Country: 1500 },
-  { date: "Ago", Pop: 3800, Rock: 2200, Hip_Hop: 3200, Electronic: 2800, Reggaeton: 2600, Country: 1600 },
-]
-
-const deviceUsageData = [
-  { device_type: "Móvil", percentage: 65, color: "#3b82f6", icon: "📱", growth: 8.2 },
-  { device_type: "Escritorio", percentage: 25, color: "#10b981", icon: "💻", growth: -2.1 },
-  { device_type: "Tablet", percentage: 7, color: "#f59e0b", icon: "📱", growth: 12.5 },
-  { device_type: "Smart TV", percentage: 3, color: "#ef4444", icon: "📺", growth: 45.8 },
-]
-
-const timeAnalysisData = [
-  { hour: "00:00", users: 1200, plays: 3400 },
-  { hour: "02:00", users: 800, plays: 2100 },
-  { hour: "04:00", users: 600, plays: 1800 },
-  { hour: "06:00", users: 1800, plays: 4200 },
-  { hour: "08:00", users: 3200, plays: 8900 },
-  { hour: "10:00", users: 4100, plays: 11200 },
-  { hour: "12:00", users: 4500, plays: 12800 },
-  { hour: "14:00", users: 4200, plays: 11900 },
-  { hour: "16:00", users: 5200, plays: 14600 },
-  { hour: "18:00", users: 6200, plays: 17800 },
-  { hour: "20:00", users: 6800, plays: 19200 },
-  { hour: "22:00", users: 5400, plays: 15600 },
-]
-
-const regionData = [
-  { region: "España", users: 45000, plays: 2800000, revenue: 140000 },
-  { region: "México", users: 38000, plays: 2400000, revenue: 96000 },
-  { region: "Argentina", users: 28000, plays: 1800000, revenue: 72000 },
-  { region: "Colombia", users: 22000, plays: 1400000, revenue: 56000 },
-  { region: "Chile", users: 18000, plays: 1200000, revenue: 48000 },
-]
+const defaultTopSongsData: Record<string, SongDataType[]> = { week: [], month: [] };
+const defaultGenreTrends: GenreTrendType[] = [];
+const defaultDeviceUsage: DeviceUsageType[] = [];
+const defaultTimeAnalysis: TimeAnalysisType[] = [];
+const defaultRegion: RegionType[] = [];
 
 export function HistoricalSection() {
+  const { topSongsData, genreTrendsData, deviceUsageData, timeAnalysisData, regionData, loading, error } = useHistoricalData();
+  const safeTopSongsData: Record<string, SongDataType[]> = (topSongsData && typeof topSongsData === 'object') ? topSongsData as Record<string, SongDataType[]> : defaultTopSongsData;
+  const safeGenreTrends: GenreTrendType[] = Array.isArray(genreTrendsData) ? genreTrendsData as GenreTrendType[] : defaultGenreTrends;
+  const safeDeviceUsage: DeviceUsageType[] = Array.isArray(deviceUsageData) ? deviceUsageData as DeviceUsageType[] : defaultDeviceUsage;
+  const safeTimeAnalysis: TimeAnalysisType[] = Array.isArray(timeAnalysisData) ? timeAnalysisData as TimeAnalysisType[] : defaultTimeAnalysis;
+  const safeRegion: RegionType[] = Array.isArray(regionData) ? regionData as RegionType[] : defaultRegion;
+
   const [selectedPeriod, setSelectedPeriod] = useState("month")
   const [selectedMetric, setSelectedMetric] = useState("plays")
   const [showComparison, setShowComparison] = useState(false)
@@ -128,6 +69,9 @@ export function HistoricalSection() {
   const [selectedGenres, setSelectedGenres] = useState(["Pop", "Rock", "Hip_Hop", "Electronic"])
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
+
+  if (loading) return <div className="p-8">Cargando datos de Spark...</div>;
+  if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
 
   const refreshData = () => {
     setIsLoading(true)
@@ -146,7 +90,7 @@ export function HistoricalSection() {
     Country: { label: "Country", color: "#06b6d4" },
   }
 
-  const currentData = topSongsData[selectedPeriod as keyof typeof topSongsData]
+  const currentData: SongDataType[] = safeTopSongsData[selectedPeriod] || [];
 
   return (
     <div className="space-y-8">
@@ -470,7 +414,7 @@ export function HistoricalSection() {
             <CardContent className="p-6">
               <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height={350}>
-                  <AreaChart data={timeAnalysisData}>
+                  <AreaChart data={safeTimeAnalysis}>
                     <XAxis dataKey="hour" tick={{ fontSize: 12, fill: "#6b7280" }} />
                     <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} />
                     <ChartTooltip content={<ChartTooltipContent />} />
@@ -562,7 +506,7 @@ export function HistoricalSection() {
             <CardContent className="p-6">
               <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height={450}>
-                  <LineChart data={genreTrendsData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                  <LineChart data={safeGenreTrends} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                     <XAxis dataKey="date" tick={{ fontSize: 12, fill: "#6b7280" }} />
                     <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} />
                     <ChartTooltip content={<ChartTooltipContent />} />
@@ -613,7 +557,7 @@ export function HistoricalSection() {
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
-                        data={deviceUsageData}
+                        data={safeDeviceUsage}
                         cx="50%"
                         cy="50%"
                         outerRadius={120}
@@ -622,7 +566,7 @@ export function HistoricalSection() {
                         label={false}
                         animationDuration={animateCharts ? 1000 : 0}
                       >
-                        {deviceUsageData.map((entry, index) => (
+                        {safeDeviceUsage.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
@@ -631,7 +575,7 @@ export function HistoricalSection() {
                   </ResponsiveContainer>
 
                   <div className="grid grid-cols-2 gap-4 mt-6 w-full">
-                    {deviceUsageData.map((item, index) => (
+                    {safeDeviceUsage.map((item, index) => (
                       <div
                         key={index}
                         className="flex items-center gap-3 p-4 rounded-lg bg-gradient-to-r from-slate-50/80 to-gray-50/80 dark:from-slate-800/50 dark:to-slate-700/50 hover:shadow-md transition-all duration-300 group border border-slate-200/50 dark:border-slate-600/50"
@@ -680,7 +624,7 @@ export function HistoricalSection() {
               </CardHeader>
               <CardContent className="p-6">
                 <div className="space-y-6">
-                  {deviceUsageData.map((device, index) => (
+                  {safeDeviceUsage.map((device, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -733,7 +677,7 @@ export function HistoricalSection() {
                 <div>
                   <ChartContainer config={chartConfig}>
                     <ResponsiveContainer width="100%" height={350}>
-                      <BarChart data={regionData}>
+                      <BarChart data={safeRegion}>
                         <XAxis dataKey="region" tick={{ fontSize: 11, fill: "#6b7280" }} />
                         <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} />
                         <ChartTooltip content={<ChartTooltipContent />} />
@@ -751,7 +695,7 @@ export function HistoricalSection() {
 
                 <div className="space-y-4">
                   <h4 className="font-semibold text-lg mb-4 text-slate-900 dark:text-slate-100">Detalles por Región</h4>
-                  {regionData.map((region, index) => (
+                  {safeRegion.map((region, index) => (
                     <div
                       key={index}
                       className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-slate-50/80 to-gray-50/80 dark:from-slate-800/50 dark:to-slate-700/50 hover:shadow-md transition-all duration-300 border border-slate-200/50 dark:border-slate-600/50"

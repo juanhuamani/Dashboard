@@ -10,78 +10,34 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { FileText, Download, TrendingUp, DollarSign, Users, Music, BarChart3, Activity, Target } from "lucide-react"
 import { Line, LineChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Area, AreaChart } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { useReportsData } from '../../hooks/useReportsData';
 
-// Mantener los mismos datos
-const revenueData = [
-  { month: "Ene", revenue: 45000, subscriptions: 1200, churn: 5.2 },
-  { month: "Feb", revenue: 52000, subscriptions: 1350, churn: 4.8 },
-  { month: "Mar", revenue: 48000, subscriptions: 1280, churn: 5.5 },
-  { month: "Abr", revenue: 61000, subscriptions: 1520, churn: 4.2 },
-  { month: "May", revenue: 58000, subscriptions: 1480, churn: 4.6 },
-  { month: "Jun", revenue: 67000, subscriptions: 1680, churn: 3.9 },
-]
+type RevenueType = { month: string; revenue: number; subscriptions: number; churn: number };
+type PerformanceType = { metric: string; value: string; change: string; status: string };
+type TopContentType = { rank: number; title: string; artist: string; plays: number; revenue: number };
+type ReportType = { id: number; title: string; description: string; type: string; date: string; status: string; size: string };
 
-const performanceData = [
-  { metric: "Tiempo de carga promedio", value: "1.2s", change: "-15%", status: "good" },
-  { metric: "Uptime del servicio", value: "99.9%", change: "+0.1%", status: "excellent" },
-  { metric: "Errores por minuto", value: "0.03", change: "-45%", status: "good" },
-  { metric: "Usuarios concurrentes máx.", value: "12,847", change: "+23%", status: "excellent" },
-]
-
-const topContent = [
-  { rank: 1, title: "Blinding Lights", artist: "The Weeknd", plays: 2840000, revenue: 14200 },
-  { rank: 2, title: "Shape of You", artist: "Ed Sheeran", plays: 2650000, revenue: 13250 },
-  { rank: 3, title: "Someone You Loved", artist: "Lewis Capaldi", plays: 2420000, revenue: 12100 },
-  { rank: 4, title: "Watermelon Sugar", artist: "Harry Styles", plays: 2180000, revenue: 10900 },
-  { rank: 5, title: "Levitating", artist: "Dua Lipa", plays: 2050000, revenue: 10250 },
-]
-
-const reports = [
-  {
-    id: 1,
-    title: "Reporte Mensual de Ingresos",
-    description: "Análisis detallado de ingresos y suscripciones del mes actual",
-    type: "Financiero",
-    date: "2024-01-15",
-    status: "Completado",
-    size: "2.4 MB",
-  },
-  {
-    id: 2,
-    title: "Análisis de Comportamiento de Usuario",
-    description: "Patrones de uso y preferencias musicales de los usuarios",
-    type: "Analítico",
-    date: "2024-01-14",
-    status: "Completado",
-    size: "1.8 MB",
-  },
-  {
-    id: 3,
-    title: "Reporte de Rendimiento Técnico",
-    description: "Métricas de rendimiento del sistema y infraestructura",
-    type: "Técnico",
-    date: "2024-01-13",
-    status: "En proceso",
-    size: "3.1 MB",
-  },
-  {
-    id: 4,
-    title: "Top Contenido y Artistas",
-    description: "Ranking de canciones y artistas más populares",
-    type: "Contenido",
-    date: "2024-01-12",
-    status: "Completado",
-    size: "1.2 MB",
-  },
-]
+const defaultRevenue: RevenueType[] = [];
+const defaultPerformance: PerformanceType[] = [];
+const defaultTopContent: TopContentType[] = [];
+const defaultReports: ReportType[] = [];
 
 export function ReportsSection() {
+  const { revenueData, performanceData, topContent, reports, loading, error } = useReportsData();
+  const safeRevenue: RevenueType[] = Array.isArray(revenueData) ? revenueData as RevenueType[] : defaultRevenue;
+  const safePerformance: PerformanceType[] = Array.isArray(performanceData) ? performanceData as PerformanceType[] : defaultPerformance;
+  const safeTopContent: TopContentType[] = Array.isArray(topContent) ? topContent as TopContentType[] : defaultTopContent;
+  const safeReports: ReportType[] = Array.isArray(reports) ? reports as ReportType[] : defaultReports;
+
   const [selectedPeriod, setSelectedPeriod] = useState("month")
   const [selectedReportType, setSelectedReportType] = useState("all")
 
-  const filteredReports = reports.filter(
+  if (loading) return <div className="p-8">Cargando datos de Spark...</div>;
+  if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
+
+  const filteredReports = safeReports.filter(
     (report) => selectedReportType === "all" || report.type.toLowerCase() === selectedReportType.toLowerCase(),
-  )
+  );
 
   const chartConfig = {
     revenue: {
@@ -220,7 +176,7 @@ export function ReportsSection() {
               <CardContent className="p-6">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={revenueData}>
+                    <AreaChart data={safeRevenue}>
                       <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#6b7280" }} />
                       <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} />
                       <ChartTooltip content={<ChartTooltipContent />} />
@@ -260,7 +216,7 @@ export function ReportsSection() {
               <CardContent className="p-6">
                 <ChartContainer config={chartConfig}>
                   <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={revenueData}>
+                    <LineChart data={safeRevenue}>
                       <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#6b7280" }} />
                       <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} />
                       <ChartTooltip content={<ChartTooltipContent />} />
@@ -296,7 +252,7 @@ export function ReportsSection() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid gap-4 md:grid-cols-2">
-                {performanceData.map((metric, index) => (
+                {safePerformance.map((metric, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-slate-50/80 to-gray-50/80 dark:from-slate-800/50 dark:to-slate-700/50 border border-slate-200/50 dark:border-slate-600/50"
@@ -332,7 +288,7 @@ export function ReportsSection() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-4">
-                {topContent.map((item) => (
+                {safeTopContent.map((item) => (
                   <div
                     key={item.rank}
                     className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-slate-50/80 to-gray-50/80 dark:from-slate-800/50 dark:to-slate-700/50 border border-slate-200/50 dark:border-slate-600/50"
@@ -395,7 +351,7 @@ export function ReportsSection() {
             <CardContent className="p-6">
               <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={revenueData}>
+                  <BarChart data={safeRevenue}>
                     <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#6b7280" }} />
                     <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} />
                     <ChartTooltip content={<ChartTooltipContent />} />

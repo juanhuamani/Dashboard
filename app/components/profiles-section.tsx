@@ -9,112 +9,56 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Users, Search, Music, Clock, Heart, TrendingUp, MapPin, Calendar, Headphones, Star } from "lucide-react"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { useProfilesData } from '../../hooks/useProfilesData';
+import React from "react";
 
-// Mantener los mismos datos
-const usersData = [
-  {
-    id: "user_001",
-    name: "María González",
-    email: "maria.gonzalez@email.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    location: "Madrid, España",
-    joinDate: "2023-01-15",
-    totalPlays: 15420,
-    favoriteGenre: "Pop",
-    listeningTime: 2340,
-    topArtist: "Taylor Swift",
-    subscription: "Premium",
-    lastActive: "Hace 2 horas",
-  },
-  {
-    id: "user_002",
-    name: "Carlos Rodríguez",
-    email: "carlos.rodriguez@email.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    location: "Barcelona, España",
-    joinDate: "2022-11-08",
-    totalPlays: 23150,
-    favoriteGenre: "Rock",
-    listeningTime: 3890,
-    topArtist: "Imagine Dragons",
-    subscription: "Free",
-    lastActive: "Hace 1 hora",
-  },
-  {
-    id: "user_003",
-    name: "Ana Martín",
-    email: "ana.martin@email.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    location: "Valencia, España",
-    joinDate: "2023-03-22",
-    totalPlays: 8760,
-    favoriteGenre: "Electronic",
-    listeningTime: 1560,
-    topArtist: "Calvin Harris",
-    subscription: "Premium",
-    lastActive: "Hace 30 min",
-  },
-  {
-    id: "user_004",
-    name: "David López",
-    email: "david.lopez@email.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    location: "Sevilla, España",
-    joinDate: "2022-07-14",
-    totalPlays: 31200,
-    favoriteGenre: "Hip Hop",
-    listeningTime: 4720,
-    topArtist: "Drake",
-    subscription: "Premium",
-    lastActive: "Hace 5 min",
-  },
-  {
-    id: "user_005",
-    name: "Laura Fernández",
-    email: "laura.fernandez@email.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    location: "Bilbao, España",
-    joinDate: "2023-05-10",
-    totalPlays: 12890,
-    favoriteGenre: "Indie",
-    listeningTime: 2180,
-    topArtist: "Arctic Monkeys",
-    subscription: "Free",
-    lastActive: "Hace 15 min",
-  },
-]
+type UserType = {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  location: string;
+  joinDate: string;
+  totalPlays: number;
+  favoriteGenre: string;
+  listeningTime: number;
+  topArtist: string;
+  subscription: string;
+  lastActive: string;
+};
+type ActivityType = { hour: string; users: number };
+type SubscriptionType = { type: string; count: number; color: string };
+type GenrePrefType = { genre: string; users: number };
 
-const userActivityData = [
-  { hour: "00", users: 1200 },
-  { hour: "04", users: 800 },
-  { hour: "08", users: 3200 },
-  { hour: "12", users: 4500 },
-  { hour: "16", users: 5200 },
-  { hour: "20", users: 6800 },
-]
-
-const subscriptionData = [
-  { type: "Premium", count: 65, color: "#8b5cf6" },
-  { type: "Free", count: 35, color: "#06b6d4" },
-]
-
-const genrePreferences = [
-  { genre: "Pop", users: 2840 },
-  { genre: "Rock", users: 2150 },
-  { genre: "Hip Hop", users: 1890 },
-  { genre: "Electronic", users: 1620 },
-  { genre: "Indie", users: 1340 },
-]
+const defaultUsers: UserType[] = [];
+const defaultActivity: ActivityType[] = [];
+const defaultSubs: SubscriptionType[] = [];
+const defaultGenres: GenrePrefType[] = [];
 
 export function ProfilesSection() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedUser, setSelectedUser] = useState(usersData[0])
+  const { usersData, userActivityData, subscriptionData, genrePreferences, loading, error } = useProfilesData();
+  const users: UserType[] = Array.isArray(usersData) ? usersData as UserType[] : defaultUsers;
+  const activities: ActivityType[] = Array.isArray(userActivityData) ? userActivityData as ActivityType[] : defaultActivity;
+  const subs: SubscriptionType[] = Array.isArray(subscriptionData) ? subscriptionData as SubscriptionType[] : defaultSubs;
+  const genres: GenrePrefType[] = Array.isArray(genrePreferences) ? genrePreferences as GenrePrefType[] : defaultGenres;
 
-  const filteredUsers = usersData.filter(
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectedUser, setSelectedUser] = React.useState<UserType | null>(users.length > 0 ? users[0] : null);
+
+  React.useEffect(() => {
+    if ((!selectedUser || !users.some(u => u.id === selectedUser.id)) && users.length > 0) {
+      setSelectedUser(users[0]);
+    }
+  }, [users, selectedUser]);
+
+  if (loading) return <div className="p-8">Cargando datos de Spark...</div>;
+  if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
+
+  const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  );
 
   const chartConfig = {
     users: {
@@ -125,7 +69,7 @@ export function ProfilesSection() {
       label: "Cantidad",
       color: "hsl(var(--chart-2))",
     },
-  }
+  };
 
   return (
     <div className="space-y-8">
@@ -227,7 +171,7 @@ export function ProfilesSection() {
                   <div
                     key={user.id}
                     className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 cursor-pointer hover:shadow-md ${
-                      selectedUser.id === user.id
+                      selectedUser?.id === user.id
                         ? "bg-gradient-to-r from-purple-50/80 to-pink-50/80 dark:from-purple-950/30 dark:to-pink-950/30 border-purple-200 dark:border-purple-700"
                         : "bg-gradient-to-r from-slate-50/80 to-gray-50/80 dark:from-slate-800/50 dark:to-slate-700/50 border-slate-200/50 dark:border-slate-600/50 hover:from-slate-100/80 hover:to-gray-100/80 dark:hover:from-slate-700/60 dark:hover:to-slate-600/60"
                     }`}
@@ -277,19 +221,19 @@ export function ProfilesSection() {
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage src={selectedUser.avatar || "/placeholder.svg"} alt={selectedUser.name} />
+                  <AvatarImage src={selectedUser?.avatar || "/placeholder.svg"} alt={selectedUser?.name} />
                   <AvatarFallback className="text-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white">
-                    {selectedUser.name
+                    {selectedUser?.name
                       .split(" ")
                       .map((n) => n[0])
                       .join("")}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{selectedUser.name}</h3>
-                  <p className="text-slate-600 dark:text-slate-400">{selectedUser.email}</p>
-                  <Badge variant={selectedUser.subscription === "Premium" ? "default" : "secondary"} className="mt-1">
-                    {selectedUser.subscription}
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{selectedUser?.name}</h3>
+                  <p className="text-slate-600 dark:text-slate-400">{selectedUser?.email}</p>
+                  <Badge variant={selectedUser?.subscription === "Premium" ? "default" : "secondary"} className="mt-1">
+                    {selectedUser?.subscription}
                   </Badge>
                 </div>
               </div>
@@ -299,7 +243,7 @@ export function ProfilesSection() {
                   <Music className="h-5 w-5 text-blue-600" />
                   <div>
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Reproducciones Totales</p>
-                    <p className="text-lg font-bold text-blue-600">{selectedUser.totalPlays.toLocaleString()}</p>
+                    <p className="text-lg font-bold text-blue-600">{selectedUser?.totalPlays.toLocaleString()}</p>
                   </div>
                 </div>
 
@@ -308,7 +252,7 @@ export function ProfilesSection() {
                   <div>
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Tiempo de Escucha</p>
                     <p className="text-lg font-bold text-green-600">
-                      {Math.floor(selectedUser.listeningTime / 60)}h {selectedUser.listeningTime % 60}m
+                      {selectedUser?.listeningTime ? `${Math.floor(selectedUser.listeningTime / 60)}h ${selectedUser.listeningTime % 60}m` : "0h 0m"}
                     </p>
                   </div>
                 </div>
@@ -317,7 +261,7 @@ export function ProfilesSection() {
                   <Heart className="h-5 w-5 text-purple-600" />
                   <div>
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Género Favorito</p>
-                    <p className="text-lg font-bold text-purple-600">{selectedUser.favoriteGenre}</p>
+                    <p className="text-lg font-bold text-purple-600">{selectedUser?.favoriteGenre}</p>
                   </div>
                 </div>
 
@@ -325,7 +269,7 @@ export function ProfilesSection() {
                   <Star className="h-5 w-5 text-orange-600" />
                   <div>
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Artista Favorito</p>
-                    <p className="text-lg font-bold text-orange-600">{selectedUser.topArtist}</p>
+                    <p className="text-lg font-bold text-orange-600">{selectedUser?.topArtist}</p>
                   </div>
                 </div>
 
@@ -334,7 +278,7 @@ export function ProfilesSection() {
                   <div>
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Miembro desde</p>
                     <p className="text-lg font-bold text-slate-600 dark:text-slate-400">
-                      {new Date(selectedUser.joinDate).toLocaleDateString()}
+                      {new Date(selectedUser?.joinDate || "").toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -356,7 +300,7 @@ export function ProfilesSection() {
           <CardContent className="p-6">
             <ChartContainer config={chartConfig}>
               <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={userActivityData}>
+                <BarChart data={activities}>
                   <XAxis dataKey="hour" tick={{ fontSize: 12, fill: "#6b7280" }} />
                   <YAxis tick={{ fontSize: 12, fill: "#6b7280" }} />
                   <ChartTooltip content={<ChartTooltipContent />} />
@@ -384,8 +328,8 @@ export function ProfilesSection() {
             <div className="flex flex-col items-center">
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
-                  <Pie data={subscriptionData} cx="50%" cy="50%" outerRadius={80} innerRadius={40} dataKey="count">
-                    {subscriptionData.map((entry, index) => (
+                  <Pie data={subs} cx="50%" cy="50%" outerRadius={80} innerRadius={40} dataKey="count">
+                    {subs.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -393,7 +337,7 @@ export function ProfilesSection() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex gap-4 mt-4">
-                {subscriptionData.map((item, index) => (
+                {subs.map((item, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
                     <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -416,7 +360,7 @@ export function ProfilesSection() {
           <CardContent className="p-6">
             <ChartContainer config={chartConfig}>
               <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={genrePreferences} layout="horizontal">
+                <BarChart data={genres} layout="horizontal">
                   <XAxis type="number" tick={{ fontSize: 12, fill: "#6b7280" }} />
                   <YAxis dataKey="genre" type="category" width={80} tick={{ fontSize: 12, fill: "#6b7280" }} />
                   <ChartTooltip content={<ChartTooltipContent />} />

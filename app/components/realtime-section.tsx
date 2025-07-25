@@ -27,123 +27,52 @@ import { ResponsiveContainer, XAxis, YAxis, Area, AreaChart } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { LiveIndicator } from "./live-indicator"
 import { MetricCard } from "./metric-card"
+import { useRealtimeData } from '../../hooks/useRealtimeData';
 
-// Mantener los mismos datos pero mejorar la presentación
-const generateTopSongs = () => [
-  {
-    song_title: "Blinding Lights",
-    artist_name: "The Weeknd",
-    plays: Math.floor(Math.random() * 1000) + 500,
-    listeners: Math.floor(Math.random() * 200) + 100,
-    growth: (Math.random() * 20 - 10).toFixed(1),
-    genre: "Pop",
-  },
-  {
-    song_title: "Shape of You",
-    artist_name: "Ed Sheeran",
-    plays: Math.floor(Math.random() * 800) + 400,
-    listeners: Math.floor(Math.random() * 180) + 90,
-    growth: (Math.random() * 20 - 10).toFixed(1),
-    genre: "Pop",
-  },
-  {
-    song_title: "Bad Habits",
-    artist_name: "Ed Sheeran",
-    plays: Math.floor(Math.random() * 700) + 300,
-    listeners: Math.floor(Math.random() * 160) + 80,
-    growth: (Math.random() * 20 - 10).toFixed(1),
-    genre: "Pop",
-  },
-  {
-    song_title: "Stay",
-    artist_name: "The Kid LAROI",
-    plays: Math.floor(Math.random() * 600) + 250,
-    listeners: Math.floor(Math.random() * 140) + 70,
-    growth: (Math.random() * 20 - 10).toFixed(1),
-    genre: "Hip Hop",
-  },
-  {
-    song_title: "Good 4 U",
-    artist_name: "Olivia Rodrigo",
-    plays: Math.floor(Math.random() * 500) + 200,
-    listeners: Math.floor(Math.random() * 120) + 60,
-    growth: (Math.random() * 20 - 10).toFixed(1),
-    genre: "Pop",
-  },
-]
+// Tipos
 
-const generateLatestPlays = () => [
-  {
-    user_id: "user_001",
-    song_title: "Watermelon Sugar",
-    artist_name: "Harry Styles",
-    timestamp: new Date(Date.now() - Math.random() * 300000).toLocaleTimeString(),
-    location: "Madrid, ES",
-    device: "Mobile",
-  },
-  {
-    user_id: "user_002",
-    song_title: "Levitating",
-    artist_name: "Dua Lipa",
-    timestamp: new Date(Date.now() - Math.random() * 300000).toLocaleTimeString(),
-    location: "Barcelona, ES",
-    device: "Desktop",
-  },
-  {
-    user_id: "user_003",
-    song_title: "Peaches",
-    artist_name: "Justin Bieber",
-    timestamp: new Date(Date.now() - Math.random() * 300000).toLocaleTimeString(),
-    location: "Valencia, ES",
-    device: "Mobile",
-  },
-  {
-    user_id: "user_004",
-    song_title: "Drivers License",
-    artist_name: "Olivia Rodrigo",
-    timestamp: new Date(Date.now() - Math.random() * 300000).toLocaleTimeString(),
-    location: "Sevilla, ES",
-    device: "Tablet",
-  },
-  {
-    user_id: "user_005",
-    song_title: "Industry Baby",
-    artist_name: "Lil Nas X",
-    timestamp: new Date(Date.now() - Math.random() * 300000).toLocaleTimeString(),
-    location: "Bilbao, ES",
-    device: "Smart TV",
-  },
-]
+type MetricType = {
+  activeUsers: number;
+  playsPerMinute: number;
+  activeSongs: number;
+  avgSessionTime: number;
+  peakConcurrent: number;
+  totalBandwidth: number;
+};
+type SongType = {
+  song_title: string;
+  artist_name: string;
+  plays: number;
+  listeners: number;
+  growth: number | string;
+  genre: string;
+};
+type PlayType = {
+  user_id: string;
+  song_title: string;
+  artist_name: string;
+  timestamp: string;
+  location: string;
+  device: string;
+};
 
-const generateRealtimeMetrics = () => ({
-  activeUsers: Math.floor(Math.random() * 2000) + 8000,
-  playsPerMinute: Math.floor(Math.random() * 500) + 1200,
-  activeSongs: Math.floor(Math.random() * 200) + 300,
-  avgSessionTime: (Math.random() * 60 + 120).toFixed(1),
-  peakConcurrent: Math.floor(Math.random() * 1000) + 5000,
-  totalBandwidth: (Math.random() * 50 + 100).toFixed(1),
-})
-
-const generateActivityData = () => {
-  const now = new Date()
-  const data = []
-  for (let i = 11; i >= 0; i--) {
-    const time = new Date(now.getTime() - i * 5 * 60 * 1000)
-    data.push({
-      time: time.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
-      users: Math.floor(Math.random() * 2000) + 6000,
-      plays: Math.floor(Math.random() * 3000) + 8000,
-      bandwidth: Math.floor(Math.random() * 50) + 80,
-    })
-  }
-  return data
-}
+const defaultMetrics: MetricType = {
+  activeUsers: 0,
+  playsPerMinute: 0,
+  activeSongs: 0,
+  avgSessionTime: 0,
+  peakConcurrent: 0,
+  totalBandwidth: 0,
+};
 
 export function RealtimeSection() {
-  const [topSongs, setTopSongs] = useState(generateTopSongs())
-  const [latestPlays, setLatestPlays] = useState(generateLatestPlays())
-  const [metrics, setMetrics] = useState(generateRealtimeMetrics())
-  const [activityData, setActivityData] = useState(generateActivityData())
+  const raw = useRealtimeData();
+  const topSongs = (raw.topSongs ?? []) as SongType[];
+  const latestPlays = (raw.latestPlays ?? []) as PlayType[];
+  const metrics = (raw.metrics ?? defaultMetrics) as MetricType;
+  const activityData = (raw.activityData ?? []) as any[];
+  const loading = raw.loading;
+  const error = raw.error;
   const [isLive, setIsLive] = useState(true)
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [refreshInterval, setRefreshInterval] = useState(3)
@@ -151,16 +80,12 @@ export function RealtimeSection() {
 
   useEffect(() => {
     if (!autoRefresh || !isLive) return
-
-    const interval = setInterval(() => {
-      setTopSongs(generateTopSongs())
-      setLatestPlays(generateLatestPlays())
-      setMetrics(generateRealtimeMetrics())
-      setActivityData(generateActivityData())
-    }, refreshInterval * 1000)
-
+    const interval = setInterval(() => {}, refreshInterval * 1000)
     return () => clearInterval(interval)
   }, [autoRefresh, isLive, refreshInterval])
+
+  if (loading) return <div className="p-8">Cargando datos de Spark...</div>;
+  if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
 
   const chartConfig = {
     users: { label: "Usuarios", color: "#3b82f6" },
@@ -209,10 +134,10 @@ export function RealtimeSection() {
             variant="outline"
             size="sm"
             onClick={() => {
-              setTopSongs(generateTopSongs())
-              setLatestPlays(generateLatestPlays())
-              setMetrics(generateRealtimeMetrics())
-              setActivityData(generateActivityData())
+              // setTopSongs(generateTopSongs()) // This line is removed as per the edit hint
+              // setLatestPlays(generateLatestPlays()) // This line is removed as per the edit hint
+              // setMetrics(generateRealtimeMetrics()) // This line is removed as per the edit hint
+              // setActivityData(generateActivityData()) // This line is removed as per the edit hint
             }}
             className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-white/90 dark:hover:bg-slate-700/90"
           >
@@ -262,7 +187,7 @@ export function RealtimeSection() {
 
         <MetricCard
           title="Sesión Promedio"
-          value={Number.parseFloat(metrics.avgSessionTime)}
+          value={metrics.avgSessionTime}
           change={5.7}
           icon={Clock}
           gradient="bg-gradient-to-br from-green-500 to-emerald-500"
@@ -281,7 +206,7 @@ export function RealtimeSection() {
 
         <MetricCard
           title="Ancho de Banda"
-          value={Number.parseFloat(metrics.totalBandwidth)}
+          value={metrics.totalBandwidth}
           change={3.8}
           icon={Activity}
           gradient="bg-gradient-to-br from-teal-500 to-cyan-500"
@@ -379,11 +304,11 @@ export function RealtimeSection() {
                           <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{song.plays}</span>
                         </div>
                         <Badge
-                          variant={Number.parseFloat(song.growth) > 0 ? "default" : "destructive"}
+                          variant={parseFloat(song.growth as string) > 0 ? "default" : "destructive"}
                           className="text-xs"
                         >
-                          {Number.parseFloat(song.growth) > 0 ? "+" : ""}
-                          {song.growth}%
+                          {parseFloat(song.growth as string) > 0 ? "+" : ""}
+                          {String(song.growth)}%
                         </Badge>
                       </div>
                     </div>
